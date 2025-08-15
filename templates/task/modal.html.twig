@@ -1,0 +1,10 @@
+<div class="form_add" style="display: none "  data-task-target="addForm">
+    {{ form_start(form, {'attr': {'data-action': 'submit->task#addTask'}}) }}
+    {{ form_row(form.title, {'attr': {'data-task-target': 'title'}}) }}
+    {{ form_row(form.description, {'attr': {'data-task-target': 'description'}}) }}
+    {{ form_row(form.timeStart, {'attr': {'data-task-target': 'startDate'}}) }}
+    {{ form_row(form.timeEnd, {'attr': {'data-task-target': 'endDate'}}) }}
+    <button type="submit">Thêm task</button>
+    {{ form_end(form) }}
+
+</div>

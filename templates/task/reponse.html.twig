@@ -1,0 +1,6 @@
+{% for task in tasks %}
+        <div>
+            <input type="checkbox" data-task-id-value="{{ task.id }}">
+            <span>{{ task.title }}</span>
+        </div>
+{% endfor %}
