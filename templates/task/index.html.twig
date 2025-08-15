@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div data-controller="task">
+        <div class="task">
+            <button type="button" data-action="click->task#toggleAdd">Add Task</button>
+            <div id="form-container">
+            </div>
+            <button type="button" data-action="click->task#deleteSelected">Xóa đã chọn</button>
+        </div>
+
+        <div id="task-list" data-task-target="list">
+            {% for task in tasks %}
+                <div>
+                    <input type="checkbox" data-task-id-value="{{ task.id }}">
+                    <span>{{ task.title }}</span>
+                    <div>|<a href="#">Chỉnh sửa</a></div>
+                </div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+{% endblock %}

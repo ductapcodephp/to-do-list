@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello LoginController!{% endblock %}
+
+{% block body %}
+    {% if error %}
+        <div>{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+    {% endif %}
+
+    <form action="{{ path('app_login') }}" method="post">
+        <label>Email:</label>
+        <label>
+            <input type="text" name="_username" value="{{ last_username }}" required autofocus>
+        </label>
+
+        <label>Password:</label>
+        <label>
+            <input type="password" name="_password" required>
+        </label>
+
+        <button type="submit">Login</button>
+    </form>
+{% endblock %}
