@@ -1,27 +1,17 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-    static targets = ["title", "description", "startDate", "endDate", "list", "addForm"]
+    static targets = ["form", "list"]
 
     connect() {
-        console.log(this.element)
-    }
-    toggleAdd(event) {
-        event.preventDefault()
-        fetch('/addTask', {
-            method: "GET",
-            headers: { "X-Requested-With": "XMLHttpRequest" }
-        })
-            .then(res => res.text())
-            .then(html => {
-                document.getElementById('form-container').innerHTML = html
-                if (this.hasAddFormTarget) {
-                    this.addFormTarget.style.display = "block"
-                }
-            })
+        console.log("TaskComponent controller connected")
     }
 
-    addTask(event) {
+    toggleForm() {
+        this.formTarget.toggleAttribute("hidden")
+    }
+
+    submit(event) {
         event.preventDefault()
         const form = event.target
         const formData = new FormData(form)
@@ -34,42 +24,68 @@ export default class extends Controller {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    console.log(data.html)
                     this.listTarget.innerHTML = data.html
                     form.reset()
-                    if (this.hasAddFormTarget) {
-                        this.addFormTarget.style.display = "none"
-                    }
+                    this.formTarget.hidden = true
                 } else {
-                    alert("Có lỗi xảy ra")
+                    alert(" Có lỗi xảy ra khi thêm task")
                 }
             })
             .catch(err => console.error(err))
     }
 
-    deleteSelected(event) {
-        event.preventDefault()
-        const checkedBoxes = this.listTarget.querySelectorAll('input[type="checkbox"]:checked')
-        if(checkedBoxes.length === 0) {
-            alert('Chưa chọn task nào để xóa')
+    deleteSelected() {
+        const checkedBoxes = this.listTarget.querySelectorAll("input[type=checkbox]:checked")
+        if (checkedBoxes.length === 0) {
+            alert(" Bạn chưa chọn task nào để xóa")
             return
         }
 
-        const ids = Array.from(checkedBoxes).map(cb => cb.dataset.taskIdValue)
+        const ids = Array.from(checkedBoxes).map(cb => cb.dataset.taskId)
 
         fetch("/deleteTask", {
-            method:"POST",
-            headers:{
+            method: "POST",
+            headers: {
                 "Content-Type": "application/json",
-                "X-Requested-With":"XMLHttpRequest"
+                "X-Requested-With": "XMLHttpRequest"
             },
-            body: JSON.stringify({ids})
+            body: JSON.stringify({ ids })
         })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    checkedBoxes.forEach(cb => cb.parentElement.remove())
+                    checkedBoxes.forEach(cb => cb.closest(".task-item").remove())
+                } else {
+                    alert(" Không thể xóa task")
                 }
             })
     }
+
+    updateTask(event) {
+        event.preventDefault()
+
+        const link = event.currentTarget
+        const id = link.dataset.taskId
+
+        const form = document.querySelector(`#task-form-${id}`)
+        const formData = new FormData(form)
+
+        fetch(`/updateTask/${id}`, {
+            method: "PUT",
+            body: formData,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+            .then(r => r.json())
+            .then(json => {
+                console.log("Response:", json)
+                if (json.success) {
+                    alert("Update thành công ✅")
+                } else {
+                    alert("Có lỗi khi update")
+                }
+            })
+    }
+
 }

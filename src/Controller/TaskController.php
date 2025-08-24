@@ -25,15 +25,17 @@ final class TaskController extends AbstractController
     #[Route('/task', name: 'app_task')]
     public function index(): Response
     {
-        $tasks = $this->em->getRepository(Task::class)->findAll();
+        $tasks = $this->taskRepository->findAll();
+        $form = $this->createForm(TaskType::class);
 
         return $this->render('task/index.html.twig', [
             'tasks' => $tasks,
+            'form'  => $form->createView(),
         ]);
     }
 
-    #[Route('/addTask', name: 'app_task_add', methods: ['POST', 'GET'])]
-    public function addTask(Request $request): Response
+    #[Route('/addTask', name: 'app_task_add', methods: ['POST'])]
+    public function addTask(Request $request): JsonResponse
     {
         $task = new Task();
         $form = $this->createForm(TaskType::class, $task);
@@ -44,16 +46,17 @@ final class TaskController extends AbstractController
             $this->em->flush();
 
             $tasks = $this->taskRepository->findAll();
-            $html = $this->renderView('task/reponse.html.twig', compact("tasks"));
+            $html = $this->renderView('task/reponse.html.twig', compact('tasks'));
 
             return new JsonResponse([
                 'success' => true,
-                'html' => $html
+                'html'    => $html,
             ]);
         }
 
-        return $this->render('task/modal.html.twig', [
-            'form' => $form->createView(),
+        return new JsonResponse([
+            'success' => false,
+            'errors'  => (string) $form->getErrors(true, false),
         ]);
     }
 
@@ -81,19 +84,20 @@ final class TaskController extends AbstractController
     #[Route('/updateTask/{id}', name: 'app_task_update', methods: ['PUT'])]
     public function updateTask(Request $request, int $id): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
         $task = $this->taskRepository->find($id);
-        if($task) {
-            $task->setTitle($data['title']);
-            $task->setDescription($data['description'] ?? null);
-            $task->setTimeStart(!empty($data['startDate']) ? new \DateTime($data['startDate']) : null);
-            $task->setTimeEnd(!empty($data['endDate']) ? new \DateTime($data['endDate']) : null);
-            $task->setStatus('pending');
+        if (!$task) {
+            return new JsonResponse(['success' => false, 'error' => 'TaskComponent not found'], 404);
+        }
+        $form = $this->createForm(TaskType::class, $task);
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();
+            return new JsonResponse(['success' => true]);
         }
         return new JsonResponse([
-            'success' => true,
-
+            'success' => false,
         ]);
     }
+
+
 }

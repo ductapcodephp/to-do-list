@@ -1,6 +1,9 @@
 {% for task in tasks %}
-        <div>
-            <input type="checkbox" data-task-id-value="{{ task.id }}">
-            <span>{{ task.title }}</span>
-        </div>
+    <div class="task-item">
+        <input type="checkbox" data-task-id="{{ task.id }}">
+        <span>{{ task.title }}</span>
+        <a href="#" class="edit-link">✏️ Chỉnh sửa</a>
+    </div>
+{% else %}
+    <p>Chưa có task nào.</p>
 {% endfor %}
