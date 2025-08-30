@@ -1,41 +1,25 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-{#    <div data-controller="task">#}
-{#        <div class="task-actions">#}
-{#            <button type="button" class="btn" data-action="task#toggleForm">#}
-{#                ➕ Thêm Task#}
-{#            </button>#}
-{#            <button type="button" class="btn btn-danger" data-action="task#deleteSelected">#}
-{#                🗑 Xóa đã chọn#}
-{#            </button>#}
-{#        </div>#}
+    <div data-controller="task">
+        <div class="task-actions">
+            <button type="button" class="btn" data-action="task#toggleForm">
+                ➕ Thêm Task
+            </button>
+            <button type="button" class="btn btn-danger" data-action="task#deleteSelected">
+                🗑 Xóa đã chọn
+            </button>
+        </div>
 
-{#        <div class="form-add" data-task-target="form" hidden>#}
-{#            {{ form_start(form, { 'attr': { 'data-action': 'submit->task#submit' } }) }}#}
-{#            {{ form_row(form.title) }}#}
-{#            {{ form_row(form.description) }}#}
-{#            {{ form_row(form.timeStart) }}#}
-{#            {{ form_row(form.timeEnd) }}#}
-{#            <button type="submit" class="btn btn-primary">Thêm</button>#}
-{#            {{ form_end(form) }}#}
-{#        </div>#}
-
-{#        <div id="task-list" data-task-target="list">#}
-{#            {% for task in tasks %}#}
-{#                <div class="task-item">#}
-{#                    <input type="checkbox" data-task-id="{{ task.id }}">#}
-{#                    <span>{{ task.title }}</span>#}
-{#                    <a href="#" class="edit-link" data-task-id="{{ task.id }}"#}
-{#                       data-action="click->task#updateTask">✏️ Chỉnh sửa#}
-{#                    </a>#}
-{#                </div>#}
-{#            {% else %}#}
-{#                <p>Chưa có task nào.</p>#}
-{#            {% endfor %}#}
-{#        </div>#}
-{#    </div>#}
-
+        <div class="form-add" data-task-target="form" hidden>
+            {{ form_start(form, { 'attr': { 'data-action': 'submit->task#submit' } }) }}
+            {{ form_row(form.title) }}
+            {{ form_row(form.description) }}
+            {{ form_row(form.timeStart) }}
+            {{ form_row(form.timeEnd) }}
+            <button type="submit" class="btn btn-primary">Thêm</button>
+            {{ form_end(form) }}
+        </div>
     {{ component('TaskComponent', { id: 'TaskComponent' }) }}
 
 {% endblock %}
