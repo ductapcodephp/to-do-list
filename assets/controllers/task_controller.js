@@ -1,43 +1,82 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-    static targets = ["form", "list"]
+    static targets = ["list", "formContainer","status"]
 
     connect() {
-        console.log("TaskComponent controller connected")
+        this.statusTask()
+        this.interval = setInterval(() => this.statusTask(), 10000)
     }
-
-    toggleForm() {
-        this.formTarget.toggleAttribute("hidden")
+    disconnect() {
+        clearInterval(this.interval)
     }
-
-    submit(event) {
+   async statusTask(){
+        fetch("/tasks/status",{headers:{"Content-Type": "application/json"}})
+            .then(res => res.json())
+            .then(data => {
+                console.log(data)
+            })
+    }
+    openAddForm(event) {
         event.preventDefault()
+
+        fetch("/addTask", {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+            .then(res => res.text())
+            .then(html => {
+                this.formContainerTarget.innerHTML = html
+                const modal = new bootstrap.Modal(document.getElementById("taskModal"))
+                modal.show()
+            })
+    }
+
+    openEditForm(event) {
+        event.preventDefault()
+        const id = event.currentTarget.dataset.taskId
+
+        fetch(`/editTask/${id}`, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+            .then(res => res.text())
+            .then(html => {
+                this.formContainerTarget.innerHTML = html
+                const modal = new bootstrap.Modal(document.getElementById("taskModal"))
+                modal.show()
+            })
+    }
+
+    saveTask(event) {
+        event.preventDefault()
+
         const form = event.target
         const formData = new FormData(form)
 
-        fetch("/addTask", {
-            method: "POST",
+        fetch(form.action, {
+            method: form.method,
             body: formData,
             headers: { "X-Requested-With": "XMLHttpRequest" }
         })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    this.listTarget.innerHTML = data.html
-                    form.reset()
-                    this.formTarget.hidden = true
+                    if (data.html) {
+                        this.listTarget.insertAdjacentHTML("beforeend", data.html)
+                    } else {
+                        location.reload()
+                    }
+                    const modal = bootstrap.Modal.getInstance(document.getElementById("taskModal"))
+                    modal.hide()
                 } else {
-                    alert(" Có lỗi xảy ra khi thêm task")
+                    alert("Có lỗi xảy ra ❌")
                 }
             })
-            .catch(err => console.error(err))
     }
 
     deleteSelected() {
         const checkedBoxes = this.listTarget.querySelectorAll("input[type=checkbox]:checked")
         if (checkedBoxes.length === 0) {
-            alert(" Bạn chưa chọn task nào để xóa")
+            alert("Bạn chưa chọn task nào để xóa")
             return
         }
 
@@ -56,36 +95,8 @@ export default class extends Controller {
                 if (data.success) {
                     checkedBoxes.forEach(cb => cb.closest(".task-item").remove())
                 } else {
-                    alert(" Không thể xóa task")
+                    alert("Không thể xóa task")
                 }
             })
     }
-
-    updateTask(event) {
-        event.preventDefault()
-
-        const link = event.currentTarget
-        const id = link.dataset.taskId
-
-        const form = document.querySelector(`#task-form-${id}`)
-        const formData = new FormData(form)
-
-        fetch(`/updateTask/${id}`, {
-            method: "PUT",
-            body: formData,
-            headers: {
-                "X-Requested-With": "XMLHttpRequest"
-            }
-        })
-            .then(r => r.json())
-            .then(json => {
-                console.log("Response:", json)
-                if (json.success) {
-                    alert("Update thành công ✅")
-                } else {
-                    alert("Có lỗi khi update")
-                }
-            })
-    }
-
 }

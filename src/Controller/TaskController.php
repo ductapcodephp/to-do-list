@@ -23,30 +23,33 @@ final class TaskController extends AbstractController
     }
 
     #[Route('/task', name: 'app_task')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $tasks = $this->taskRepository->findAll();
-        $form = $this->createForm(TaskType::class);
-
-        return $this->render('task/index.html.twig', [
+        $form= $this->createForm(TaskType::class);
+        $form->handleRequest($request);
+        return $this->render("task/index.html.twig", [
             'tasks' => $tasks,
-            'form'  => $form->createView(),
+            'form' => $form
         ]);
     }
 
-    #[Route('/addTask', name: 'app_task_add', methods: ['POST'])]
-    public function addTask(Request $request): JsonResponse
+    #[Route('/addTask', name: 'app_task_add', methods: ['GET','POST'])]
+    public function addTask(Request $request): Response
     {
         $task = new Task();
-        $form = $this->createForm(TaskType::class, $task);
+        $form = $this->createForm(TaskType::class, $task,[
+            'action' => $this->generateUrl('app_task_add'),
+            'method' => 'POST',
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->persist($task);
             $this->em->flush();
-
-            $tasks = $this->taskRepository->findAll();
-            $html = $this->renderView('task/reponse.html.twig', compact('tasks'));
+            $html = $this->renderView('task/response.html.twig', [
+                'task' => $task,
+            ]);
 
             return new JsonResponse([
                 'success' => true,
@@ -54,10 +57,7 @@ final class TaskController extends AbstractController
             ]);
         }
 
-        return new JsonResponse([
-            'success' => false,
-            'errors'  => (string) $form->getErrors(true, false),
-        ]);
+        return $this->render("task/modal.html.twig", ['form' => $form->createView()]);
     }
 
 
@@ -81,23 +81,60 @@ final class TaskController extends AbstractController
 
         return new JsonResponse(['success' => true]);
     }
-    #[Route('/updateTask/{id}', name: 'app_task_update', methods: ['PUT'])]
-    public function updateTask(Request $request, int $id): JsonResponse
+    #[Route('/editTask/{id}', name: 'app_task_edit', methods: ['GET','POST'])]
+    public function editTask(int $id, Request $request): Response
     {
         $task = $this->taskRepository->find($id);
         if (!$task) {
-            return new JsonResponse(['success' => false, 'error' => 'TaskComponent not found'], 404);
+            throw $this->createNotFoundException("Task not found");
         }
-        $form = $this->createForm(TaskType::class, $task);
+
+        $form = $this->createForm(TaskType::class, $task, [
+            'action' => $this->generateUrl('app_task_edit', ['id' => $task->getId()]),
+            'method' => 'POST'
+        ]);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();
+            $html = $this->renderView('task/response.html.twig', [
+                'task' => $task,
+            ]);
             return new JsonResponse(['success' => true]);
         }
-        return new JsonResponse([
-            'success' => false,
+
+
+        return $this->render('task/modal_edit.html.twig', [
+            'form' => $form->createView(),
+            'task' => $task
         ]);
     }
+    #[Route('/tasks/status', name: 'task_status', methods: ['GET'])]
+    public function status(TaskRepository $repo, EntityManagerInterface $em): JsonResponse
+    {
+        $now = new \DateTimeImmutable('now');
+        $tasks = $repo->findAll();
+        $data = [];
+
+        foreach ($tasks as $task) {
+            $oldStatus = $task->getStatus();
+            $task->updateStatus($now);
+
+            if ($oldStatus !== $task->getStatus()) {
+                $em->persist($task);
+            }
+
+            $data[] = [
+                'id' => $task->getId(),
+                'status' => $task->getStatus(),
+                'description' => $task->getDescription(),
+            ];
+        }
+
+        $em->flush();
+
+        return $this->json($data);
+    }
+
 
 
 }

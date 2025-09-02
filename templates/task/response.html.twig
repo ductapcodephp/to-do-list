@@ -1,0 +1,11 @@
+{% for task in this.data %}
+    <div class="task-item d-flex" >
+        <input type="checkbox" data-task-id="{{ task.id }}">
+        <div>{{ task.title }}</div>
+        <a href="#" data-task-id="{{ task.id }}" data-action="task#openEditForm">✏ Chỉnh sửa</a>
+    </div>
+    <div data-task-target="status" data-id="{{ task.id }}"> {{ task.status == 0 ?
+        '🕒 Chưa bắt đầu' : (task.status == 1 ? '✅ Đang diễn ra' : '⏰ Đã kết thúc') }} </div>
+{% else %}
+    <div>No results found.</div>
+{% endfor %}

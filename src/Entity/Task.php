@@ -18,8 +18,8 @@ class Task
 
     #[ORM\Column(type: "text", nullable: true)]
     public ?string $description = null;
-    #[ORM\Column(length: 20)]
-    private string $status = 'pending';
+    #[ORM\Column(type: "integer")]
+    private int $status = 0;
     #[ORM\Column(length: 20, nullable: true)]
     private int $durationDay ;
     #[ORM\Column(type: "datetime", nullable: true)]
@@ -58,14 +58,15 @@ class Task
         $this->description = $description;
     }
 
-    public function getStatus(): ?bool
+    public function getStatus(): ?int
     {
         return $this->status;
     }
 
-    public function setStatus(?bool $status): void
+    public function setStatus(int $status): self
     {
         $this->status = $status;
+        return $this;
     }
 
     public function getDurationDay(): int
@@ -117,5 +118,23 @@ class Task
     {
         $this->updatedAt = $updatedAt;
     }
+
+    public function updateStatus(?\DateTimeInterface $now = null): void
+    {
+        $now = $now ?? new \DateTimeImmutable('now');
+
+        if ($this->getTimeStart() !== null && $this->getTimeEnd() !== null) {
+            if ($this->getTimeStart() <= $now && $this->getTimeEnd() >= $now) {
+                $this->setStatus(1);
+            } elseif ($this->getTimeEnd() < $now) {
+                $this->setStatus(2);
+            } else {
+                $this->setStatus(0);
+            }
+        } else {
+            $this->setStatus(0);
+        }
+    }
+
 
 }

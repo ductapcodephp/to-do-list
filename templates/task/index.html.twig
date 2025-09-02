@@ -3,7 +3,7 @@
 {% block body %}
     <div data-controller="task">
         <div class="task-actions">
-            <button type="button" class="btn" data-action="task#toggleForm">
+            <button type="button" class="btn" data-action="task#openAddForm">
                 ➕ Thêm Task
             </button>
             <button type="button" class="btn btn-danger" data-action="task#deleteSelected">
@@ -11,15 +11,12 @@
             </button>
         </div>
 
-        <div class="form-add" data-task-target="form" hidden>
-            {{ form_start(form, { 'attr': { 'data-action': 'submit->task#submit' } }) }}
-            {{ form_row(form.title) }}
-            {{ form_row(form.description) }}
-            {{ form_row(form.timeStart) }}
-            {{ form_row(form.timeEnd) }}
-            <button type="submit" class="btn btn-primary">Thêm</button>
-            {{ form_end(form) }}
+        <div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content" data-task-target="formContainer"></div>
+            </div>
         </div>
-    {{ component('TaskComponent', { id: 'TaskComponent' }) }}
 
+        {{ component('TaskComponent', { id: 'TaskComponent' }) }}
+    </div>
 {% endblock %}
