@@ -36,8 +36,9 @@
         </tbody>
     </table>
 
-    {{ form_start(form) }}
-    <button type="submit" class="btn btn-primary">Thêm</button>
+    {{ form_start(form)}}
+    {{ form_row(form.file) }}
+    <button type="submit" class="btn btn-primary">📤 Import Excel</button>
     {{ form_end(form) }}
 
 {% endblock %}

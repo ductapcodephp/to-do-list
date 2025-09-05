@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Task;
 use App\Form\ExportType;
+use App\Form\ImportType;
 use App\Form\TaskType;
 use App\Repository\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -145,7 +146,7 @@ final class TaskController extends AbstractController
     public function indexExcel(Request $request): Response
     {
         $tasks = $this->taskRepository->findAll();
-        $form= $this->createForm(ExportType::class);
+        $form= $this->createForm(ImportType::class);
         $form->handleRequest($request);
         return $this->render('excel/index.html.twig', [
             'tasks' => $tasks,
@@ -154,7 +155,12 @@ final class TaskController extends AbstractController
     }
     #[Route('/task/import', name: 'task_import', methods: ['GET','POST'])]
     public function exportExcel(Request $request, EntityManagerInterface $em): Response
-    {        $form = $this->createForm(ExportType::class);
+    {
+        $form = $this->createForm(ImportType::class, null, [
+            'action' => $this->generateUrl('task_import'),
+            'method' => 'POST',
+            'attr' => ['enctype' => 'multipart/form-data']
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -170,18 +176,25 @@ final class TaskController extends AbstractController
                         continue;
                     }
 
-                    $task = new Task();
+                    $id = $row[0] ?? null;
+                    if ($id) {
+                        $task = $em->getRepository(Task::class)->find($id);
+                    }
+
+                    if (empty($task)) {
+                        $task = new Task();
+                        $em->persist($task);
+                    }
+
                     $task->setTitle($row[1] ?? null);
                     $task->setDescription($row[2] ?? null);
                     $task->setDurationDay((int)($row[3] ?? 0));
-                    $task->setTimeStart(!empty($row[4]) ? new DateTime($row[4]) : null);
-                    $task->setTimeEnd(!empty($row[5]) ? new DateTime($row[5]) : null);
-                    $em->persist($task);
-
+                    $task->setTimeStart(!empty($row[4]) ? new \DateTime($row[4]) : null);
+                    $task->setTimeEnd(!empty($row[5]) ? new \DateTime($row[5]) : null);
+                    $task->setUpdatedAt(new \DateTimeImmutable('now'));
                 }
 
                 $em->flush();
-                $this->addFlash('success', 'Import thành công!');
                 return $this->redirectToRoute('app_task_excel');
             }
         }
