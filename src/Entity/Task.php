@@ -21,7 +21,7 @@ class Task
     #[ORM\Column(type: "integer")]
     private int $status = 0;
     #[ORM\Column(length: 20, nullable: true)]
-    private int $durationDay ;
+    private int $durationDay = 0;
     #[ORM\Column(type: "datetime", nullable: true)]
     private ?\DateTimeInterface $timeStart = null;
     #[ORM\Column(type: "datetime", nullable: true)]

@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Danh sách Task</h1>
+
+    <div class="mb-3">
+        <a href="{{ path('task_export') }}" class="btn btn-success">
+            📥 Export Excel
+        </a>
+
+        <a href="{{ path('task_import') }}" class="btn btn-primary">
+            📤 Import Excel
+        </a>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Tiêu đề</th>
+            <th scope="col">Mô tả</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for task in tasks %}
+            <tr>
+                <th scope="row">{{ loop.index }}</th>
+                <td>{{ task.title }}</td>
+                <td>{{ task.description }}</td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3" class="text-center">Chưa có Task nào</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {{ form_start(form) }}
+    <button type="submit" class="btn btn-primary">Thêm</button>
+    {{ form_end(form) }}
+
+{% endblock %}

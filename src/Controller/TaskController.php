@@ -3,14 +3,20 @@
 namespace App\Controller;
 
 use App\Entity\Task;
+use App\Form\ExportType;
 use App\Form\TaskType;
 use App\Repository\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use DateTime;
+use DateTimeImmutable;
 
 final class TaskController extends AbstractController
 {
@@ -135,6 +141,103 @@ final class TaskController extends AbstractController
         return $this->json($data);
     }
 
+    #[Route('page-excel', name: 'app_task_excel', methods: ['GET'])]
+    public function indexExcel(Request $request): Response
+    {
+        $tasks = $this->taskRepository->findAll();
+        $form= $this->createForm(ExportType::class);
+        $form->handleRequest($request);
+        return $this->render('excel/index.html.twig', [
+            'tasks' => $tasks,
+            'form' => $form->createView(),
+        ]);
+    }
+    #[Route('/task/import', name: 'task_import', methods: ['GET','POST'])]
+    public function exportExcel(Request $request, EntityManagerInterface $em): Response
+    {        $form = $this->createForm(ExportType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $file = $form->get('file')->getData();
+
+            if ($file) {
+                $spreadsheet = IOFactory::load($file->getPathname());
+                $sheet = $spreadsheet->getActiveSheet();
+                $rows = $sheet->toArray();
+
+                foreach ($rows as $index => $row) {
+                    if ($index === 0) {
+                        continue;
+                    }
+
+                    $task = new Task();
+                    $task->setTitle($row[1] ?? null);
+                    $task->setDescription($row[2] ?? null);
+                    $task->setDurationDay((int)($row[3] ?? 0));
+                    $task->setTimeStart(!empty($row[4]) ? new DateTime($row[4]) : null);
+                    $task->setTimeEnd(!empty($row[5]) ? new DateTime($row[5]) : null);
+                    $em->persist($task);
+
+                }
+
+                $em->flush();
+                $this->addFlash('success', 'Import thành công!');
+                return $this->redirectToRoute('app_task_excel');
+            }
+        }
+
+        return $this->render('excel/index.html.twig', [
+            'tasks' => $this->taskRepository->findAll(),
+            'form' => $form->createView(),
+        ]);
+    }
+
+    #[Route('/tasks/export', name: 'task_export')]
+    public function export(TaskRepository $taskRepository): Response
+    {
+        $tasks = $taskRepository->findAll();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setCellValue('A1', 'ID');
+        $sheet->setCellValue('B1', 'Title');
+        $sheet->setCellValue('C1', 'Description');
+        $sheet->setCellValue('D1', 'DurationDay');
+        $sheet->setCellValue('E1', 'TimeStart');
+        $sheet->setCellValue('F1', 'TimeEnd');
+        $sheet->setCellValue('G1', 'Status');
+        $sheet->setCellValue('H1', 'CreatedAt');
+        $sheet->setCellValue('I1', 'UpdatedAt');
+
+        $rowNum = 2;
+        foreach ($tasks as $task) {
+            $sheet->setCellValue("A{$rowNum}", $task->getId());
+            $sheet->setCellValue("B{$rowNum}", $task->getTitle());
+            $sheet->setCellValue("C{$rowNum}", $task->getDescription());
+            $sheet->setCellValue("D{$rowNum}", $task->getDurationDay());
+            $sheet->setCellValue("E{$rowNum}", $task->getTimeStart()?->format('Y-m-d H:i'));
+            $sheet->setCellValue("F{$rowNum}", $task->getTimeEnd()?->format('Y-m-d H:i'));
+            $sheet->setCellValue("G{$rowNum}", $task->getStatus());
+            $sheet->setCellValue("H{$rowNum}", $task->getCreatedAt()?->format('Y-m-d H:i'));
+            $sheet->setCellValue("I{$rowNum}", $task->getUpdatedAt()?->format('Y-m-d H:i'));
+
+            $rowNum++;
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'tasks_export.xlsx';
+
+        $response = new Response();
+        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response->headers->set('Content-Disposition', "attachment; filename=\"$fileName\"");
+
+        ob_start();
+        $writer->save('php://output');
+        $content = ob_get_clean();
+        $response->setContent($content);
+
+        return $response;
+    }
 
 
 }
