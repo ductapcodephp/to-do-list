@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Post;
 use App\Entity\Task;
 use App\Form\ExportType;
 use App\Form\ImportType;
@@ -9,17 +10,17 @@ use App\Form\TaskType;
 use App\Repository\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
-use DateTime;
-use DateTimeImmutable;
 
-final class TaskController extends AbstractController
+final class     TaskController extends AbstractController
 {
     private EntityManagerInterface $em;
     private TaskRepository $taskRepository;
@@ -253,4 +254,33 @@ final class TaskController extends AbstractController
     }
 
 
+    #[Route('component', name:'task_component', methods: ['GET'])]
+    public function component(): Response
+    {
+
+        return $this->render('practice_component/index.html.twig');
+    }
+    #[Route('stimulus', name:'task_stimulus', methods: ['GET'])]
+    public function stimulus(): Response
+    {
+
+        return $this->render('practice_component/stimulus.html.twig');
+    }
+
+    #[Route('/download/{filename}', name: 'app_file_download')]
+    public function download(string $filename): BinaryFileResponse
+    {
+        $filePath = $this->getParameter('kernel.project_dir').'/public/uploads/'.$filename;
+
+        if (!file_exists($filePath)) {
+            throw $this->createNotFoundException('File not found');
+        }
+        return $this->file($filePath, $filename, ResponseHeaderBag::DISPOSITION_ATTACHMENT);
+    }
+    #[Route('form', name:'task_form', methods: ['GET'])]
+    public function form(EntityManagerInterface $em): Response
+    {
+        $post = $em->getRepository(Post::class)->findAll();
+        return $this->render('practice_component/form.html.twig',['post'=>$post]);
+    }
 }

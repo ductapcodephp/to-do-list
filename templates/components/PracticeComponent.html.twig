@@ -1,0 +1,50 @@
+<div {{ attributes }} data-turbo="false">
+
+{#    {% for task in this.data %}#}
+{#        <ul>#}
+{#            <li><strong>{{ task.id }}</strong></li>#}
+{#            <li><strong>{{ task.title }}</strong></li>#}
+{#        </ul>#}
+
+{#        <button#}
+{#                type="button"#}
+{#                data-action="live#action"#}
+{#                data-live-action-param="addItem"#}
+{#                data-live-id-param="{{ task.id }}"#}
+{#                data-live-item-name-param="{{ task.title }}"#}
+{#        >#}
+{#            Add Task#}
+{#        </button>#}
+{#    {% endfor %}#}
+
+
+{#     <input type="file" name="multiple[]" multiple />#}
+{#        <button#}
+{#                type="button"#}
+{#                data-action="live#action"#}
+{#                data-live-action-param="files(multiple[])|myAction"#}
+{#        >#}
+{#            Upload#}
+{#        </button>#}
+
+    <div>
+        <h3>Chọn file để tải</h3>
+        <ul>
+            {% for file in this.files %}
+                <li>
+                    {{ file }}
+                    <button
+                            type="button"
+                            data-action="live#action"
+                            data-live-action-param="initiateDownload"
+                            data-live-filename-param="{{ file }}"
+                    >
+                        Download
+                    </button>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+
+</div>

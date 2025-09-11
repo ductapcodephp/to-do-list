@@ -1,0 +1,42 @@
+<div{{ attributes.defaults({
+    'data-controller': 'component'
+}) }}>
+{#    <div>#}
+{#        {% for task in this.data %}#}
+{#            <ul>#}
+{#                <li><strong>{{ task.title }}</strong></li>#}
+{#            </ul>#}
+{#        {% endfor %}#}
+
+{#    </div>#}
+{#    <p>Current mode: {{ this.mode }}</p>#}
+{#    <button#}
+{#            type="button"#}
+{#            data-model="mode"#}
+{#            data-value="hehhe"#}
+{#            data-action="live#update"#}
+{#    >Edit</button>#}
+
+
+{#    <p>Current mode: {{ this.mode }}</p>#}
+{#    <div >#}
+{#        <button data-action="component#toggleMode" id="component">#}
+{#            Mode#}
+{#        </button>#}
+{#    </div>#}
+    <p>Current mode: {{ this.mode }}</p>
+
+    <button
+            type="button"
+            data-action="component#editMode"
+    >
+        Change mode (LiveProp)
+    </button>
+
+    <button
+            type="button"
+            data-action="component#saveMode"
+    >
+        Save mode (LiveAction)
+    </button>
+</div>
